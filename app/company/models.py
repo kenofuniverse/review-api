@@ -6,10 +6,13 @@ class Company(models.Model):
   """
   name = models.CharField(
     max_length = 256,
+    unique=True,
     null = False
   )
 
-  company_id = models.CharField(
-    max_length = 256,
-    null = False
-  )
+  description = models.TextField(blank=True)
+
+  verbose_name_plural = 'companies'
+
+  def __str__(self):
+    return self.name
