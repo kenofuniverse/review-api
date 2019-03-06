@@ -1,15 +1,17 @@
 from rest_framework import serializers
 from app.review.models import Review
 from app.company.models import Company
+from app.company.serializers import CompanySerializer
+from app.user.serializers import CustomUserSerializer
 
 class ReviewSerializer(serializers.ModelSerializer):
-  company = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all())
-  reviewer = serializers.PrimaryKeyRelatedField(read_only=True)
+  company = CompanySerializer(read_only=True)
+  reviewer = CustomUserSerializer(read_only=True)
 
   class Meta:
     model = Review
     fields = ['id', 'rating', 'title', 'summary', 'ip_address', 'submission_date', 'company', 'reviewer']
-    read_only_fields = ('ip_address')
+    read_only_fields = ['ip_address']
   
   def create(self, validated_data):
     request = self.context.get('request')
