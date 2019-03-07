@@ -16,10 +16,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from rest_framework.authtoken import views
+from rest_framework_swagger.views import get_swagger_view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/v1/companies', include('app.company.urls')),
-    path('api/v1/reviews', include('app.review.urls')),
-    path('rest-auth/', views.obtain_auth_token)
+    path('api/v1/companies', include('app.company.urls'), name='company'),
+    path('api/v1/reviews', include('app.review.urls'), name='review'),
+    path('auth', views.obtain_auth_token, name='auth'),
+    path('api-doc', get_swagger_view(title='Review API'))
 ]

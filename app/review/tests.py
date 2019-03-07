@@ -1,10 +1,12 @@
-from rest_framework.test import APITestCase
+from rest_framework.test import APITestCase, APIRequestFactory
 from rest_framework.authtoken.models import Token
 from rest_framework import status
 from django.urls import reverse
 from model_mommy import mommy
+from mock import MagicMock
 
 from app.review.models import Review
+from app.review.permissions import IsReviewer
 from app.company.models import Company
 from app.user.models import CustomUser
 
@@ -20,6 +22,10 @@ class ReviewTests(APITestCase):
       name='Fake Company',
       description='A Fake Company'
     )
+    self.url = reverse('review-list-view')
+    self.permission = IsReviewer
+    self.request = MagicMock(user=MagicMock())
+    self.view = MagicMock()
 
   def login(self):
     token = Token.objects.get(user=self.user)
@@ -33,11 +39,15 @@ class ReviewTests(APITestCase):
       'company_id': self.company.id
     }
 
+  def test_permission_is_reviewer(self):
+    # Should be false for non reviewers
+    org = MagicMock()
+    self.assertFalse(self.permission.has_object_permission(self, self.request, self.view, org))
+
   def test_get_reviews_from_empty_reviews(self):
     # Should get empty array
     self.login()
-    url = reverse('review-list-view')
-    response = self.client.get(url, format='json')
+    response = self.client.get(self.url, format='json')
 
     self.assertEqual(response.status_code, status.HTTP_200_OK)
     self.assertEqual(response.data, [])
@@ -47,9 +57,8 @@ class ReviewTests(APITestCase):
     before_count = Review.objects.all().count()
 
     self.login()
-    url = reverse('review-list-view')
     response = self.client.post(
-      url,
+      self.url,
       self.dummy_review()
     )
 
@@ -67,19 +76,20 @@ class ReviewTests(APITestCase):
   def test_get_reviews(self):
     # Should get reviews posted
     self.login()
-    url = reverse('review-list-view')
 
-    response = self.client.post(url, self.dummy_review())
+    response = self.client.post(self.url, self.dummy_review())
     review_id = response.data.get('id')
+    reviewer = response.data.get('reviewer')
 
-    response = self.client.get(url, format='json')
+    response = self.client.get(self.url, format='json')
     self.assertEqual(response.status_code, status.HTTP_200_OK)
     self.assertEqual(response.data[0]['id'], review_id)
+    for review in response.data:
+      self.assertEqual(review['reviewer']['id'], reviewer['id'])
   
   def test_get_reviews_from_non_authenticated_user(self):
     # Should get 403 Forbidden
-    url = reverse('review-list-view')
-    response = self.client.get(url, format='json')
+    response = self.client.get(self.url, format='json')
     self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
 
   def test_get_reviews_from_other_user(self):
@@ -97,9 +107,8 @@ class ReviewTests(APITestCase):
     ]
 
     self.login()
-    url = reverse('review-list-view')
 
-    response = self.client.get(url)
+    response = self.client.get(self.url)
     self.assertEqual(len(response.data), len(my_reviews))
     for review, returned_review in zip(my_reviews, reversed(response.data)):
       self.assertEqual(review.id, returned_review['id'])
@@ -107,4 +116,3 @@ class ReviewTests(APITestCase):
   def test_review_str(self):
     review = mommy.make(Review, title='Fake Review') 
     self.assertEqual(str(review), 'Fake Review')
-    
