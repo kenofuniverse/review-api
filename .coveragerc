@@ -1,0 +1,7 @@
+[run]
+omit = 
+  **/.pyenv/*,
+  **/migrations/*,
+  **/apps.py
+  **/manage.py
+  **/__init__.py
