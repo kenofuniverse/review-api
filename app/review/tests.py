@@ -103,3 +103,8 @@ class ReviewTests(APITestCase):
     self.assertEqual(len(response.data), len(my_reviews))
     for review, returned_review in zip(my_reviews, reversed(response.data)):
       self.assertEqual(review.id, returned_review['id'])
+
+  def test_review_str(self):
+    review = mommy.make(Review, title='Fake Review') 
+    self.assertEqual(str(review), 'Fake Review')
+    
