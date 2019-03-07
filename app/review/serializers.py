@@ -6,11 +6,12 @@ from app.user.serializers import CustomUserSerializer
 
 class ReviewSerializer(serializers.ModelSerializer):
   company = CompanySerializer(read_only=True)
+  company_id = serializers.PrimaryKeyRelatedField(queryset=Company.objects.all(), source='company', write_only=True)
   reviewer = CustomUserSerializer(read_only=True)
 
   class Meta:
     model = Review
-    fields = ['id', 'rating', 'title', 'summary', 'ip_address', 'submission_date', 'company', 'reviewer']
+    fields = ['id', 'rating', 'title', 'summary', 'ip_address', 'submission_date', 'company', 'company_id', 'reviewer']
     read_only_fields = ['ip_address']
   
   def create(self, validated_data):
