@@ -39,6 +39,14 @@ class ReviewTests(APITestCase):
       'company_id': self.company.id
     }
 
+  def dummy_bad_review(self):
+    return {
+      'title': 'Dummy Review',
+      'summary': 'This is Dummy Review',
+      'rating': 7, # must be between 1-5
+      'company_id': self.company.id
+    }
+
   def test_permission_is_reviewer(self):
     # Should be false for non reviewers
     org = MagicMock()
@@ -72,6 +80,16 @@ class ReviewTests(APITestCase):
     self.assertEqual(last_review.rating, 1)
     self.assertEqual(last_review.reviewer, self.user)
     self.assertEqual(last_review.company, self.company)
+
+  def test_create_bad_review(self):
+    # Should return bad request for bad review
+    self.login()
+    response = self.client.post(
+      self.url,
+      self.dummy_bad_review()
+    )
+
+    self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
   def test_get_reviews(self):
     # Should get reviews posted
